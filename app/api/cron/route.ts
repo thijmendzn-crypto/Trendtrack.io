@@ -37,29 +37,28 @@ export async function GET(request: NextRequest) {
   const log: string[] = [];
 
   try {
-    // 1. Fetch Amazon + Google Trends → signals
-    const [amazonProducts, googleTrends] = await Promise.all([
-      fetchAmazonTrends(),
-      fetchGoogleTrends(),
-    ]);
+    // 1. Fetch Google Trends → signals (Amazon blocks Vercel IPs)
+    const googleTrends = await fetchGoogleTrends();
 
-    // Merge: match Google Trends growth to Amazon products
-    const signals = amazonProducts.slice(0, 40).map((product, index) => {
-      const trend = googleTrends.find((t) =>
-        product.name.toLowerCase().includes(t.keyword.split(" ")[0])
-      );
-      const growth = trend?.growth ?? Math.floor(Math.random() * 30) + 5;
-      const score = Math.max(10, Math.min(99, 95 - index * 2 + Math.floor(growth / 5)));
+    const signals = googleTrends.slice(0, 30).map((trend, index) => {
+      const score = Math.max(10, Math.min(99, 90 - index * 2 + Math.floor(trend.growth / 10)));
+      const markets: Record<string, string> = {
+        "recovery gummies": "Fitness", "walking pad": "Home", "hair growth serum": "Beauty",
+        "pet enrichment": "Pets", "spf serum": "Beauty", "heatless curls": "Beauty",
+        "air purifier filter": "Home", "fabric shaver": "Home", "collagen powder": "Fitness",
+        "sleep supplement": "Fitness", "protein snacks": "Fitness", "cold plunge": "Fitness",
+        "red light therapy": "Beauty", "gut health supplement": "Fitness", "posture corrector": "Home",
+      };
 
       return {
-        name: product.name.slice(0, 120),
-        market: product.category,
-        source: index % 3 === 0 ? "Amazon" : index % 3 === 1 ? "Google Trends" : "Meta",
+        name: trend.keyword.charAt(0).toUpperCase() + trend.keyword.slice(1),
+        market: markets[trend.keyword] || "General",
+        source: "Google Trends",
         score,
-        intent: Math.max(10, score - 8),
-        speed: `+${Math.abs(growth)}%`,
+        intent: Math.max(10, score - 7),
+        speed: `+${Math.abs(trend.growth)}%`,
         status: score >= 80 ? "hot" : "rising",
-        angle: `Trending in ${product.category.toLowerCase()} — rank #${product.rank} on Amazon Best Sellers.`,
+        angle: `Search interest ${trend.growth > 0 ? "up" : "down"} ${Math.abs(trend.growth)}% over the last 90 days on Google.`,
         refreshed_at: new Date().toISOString(),
       };
     });
