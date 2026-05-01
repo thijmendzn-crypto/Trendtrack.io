@@ -32,8 +32,27 @@ function classifySpend(lower?: string, upper?: string): string {
   return "Testing";
 }
 
+async function getMetaToken(): Promise<string | null> {
+  const envToken = process.env.META_AD_LIBRARY_TOKEN;
+
+  // Try Supabase for a fresher token first
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const db = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data } = await db.from("meta_token").select("token").eq("id", 1).maybeSingle();
+    if (data?.token) return data.token;
+  } catch {
+    // fall through to env token
+  }
+
+  return envToken || null;
+}
+
 export async function fetchMetaAds(searchTerms: string[]): Promise<MetaAd[]> {
-  const token = process.env.META_AD_LIBRARY_TOKEN;
+  const token = await getMetaToken();
   if (!token) return [];
 
   const results: MetaAd[] = [];

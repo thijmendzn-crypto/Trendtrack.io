@@ -28,6 +28,16 @@ create policy "service role manages shops" on public.shops for all to service_ro
 drop policy if exists "public read shops" on public.shops;
 create policy "public read shops" on public.shops for select to anon using (true);
 
+-- Meta token storage for auto-refresh
+create table if not exists public.meta_token (
+  id integer primary key default 1,
+  token text not null,
+  refreshed_at timestamptz not null default now()
+);
+alter table public.meta_token enable row level security;
+drop policy if exists "service role manages meta_token" on public.meta_token;
+create policy "service role manages meta_token" on public.meta_token for all to service_role using (true) with check (true);
+
 -- Signals: trending products from Amazon + Google Trends
 create table if not exists public.signals (
   id bigint generated always as identity primary key,

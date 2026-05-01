@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { fetchAmazonTrends } from "@/app/lib/fetchers/amazon";
 import { fetchGoogleTrends } from "@/app/lib/fetchers/google-trends";
 import { fetchMetaAds } from "@/app/lib/fetchers/meta-ads";
 import { fetchMilledEmails } from "@/app/lib/fetchers/milled";
@@ -14,6 +13,70 @@ function supabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+type MetaTokenResponse = {
+  access_token?: string;
+  expires_in?: number;
+  error?: { message: string };
+};
+
+async function refreshMetaTokenIfNeeded(
+  db: ReturnType<typeof supabase>,
+  log: string[]
+) {
+  const appId = process.env.META_APP_ID;
+  const appSecret = process.env.META_APP_SECRET;
+  const currentToken = process.env.META_AD_LIBRARY_TOKEN;
+  if (!appId || !appSecret || !currentToken) return;
+
+  // Check when token was last refreshed in Supabase
+  const { data } = await db
+    .from("meta_token")
+    .select("refreshed_at")
+    .eq("id", 1)
+    .maybeSingle();
+
+  const lastRefresh = data?.refreshed_at ? new Date(data.refreshed_at) : null;
+  const daysSinceRefresh = lastRefresh
+    ? (Date.now() - lastRefresh.getTime()) / (1000 * 60 * 60 * 24)
+    : 999;
+
+  // Refresh if older than 50 days (token lasts 60 days)
+  if (daysSinceRefresh < 50) {
+    log.push(`meta token: still valid (refreshed ${Math.floor(daysSinceRefresh)}d ago)`);
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      grant_type: "fb_exchange_token",
+      client_id: appId,
+      client_secret: appSecret,
+      fb_exchange_token: currentToken,
+    });
+
+    const response = await fetch(
+      `https://graph.facebook.com/oauth/access_token?${params.toString()}`
+    );
+    const payload = (await response.json()) as MetaTokenResponse;
+
+    if (payload.error || !payload.access_token) {
+      log.push(`meta token refresh failed: ${payload.error?.message || "no token returned"}`);
+      return;
+    }
+
+    // Save new token to Supabase
+    await db.from("meta_token").upsert({
+      id: 1,
+      token: payload.access_token,
+      refreshed_at: new Date().toISOString(),
+    });
+
+    log.push("meta token: refreshed successfully");
+  } catch (error) {
+    log.push(`meta token refresh error: ${String(error)}`);
+  }
 }
 
 const META_SEARCH_TERMS = [
@@ -37,6 +100,9 @@ export async function GET(request: NextRequest) {
   const log: string[] = [];
 
   try {
+    // 0. Auto-refresh Meta token if expiring within 7 days
+    await refreshMetaTokenIfNeeded(db, log);
+
     // 1. Fetch Google Trends → signals (Amazon blocks Vercel IPs)
     const googleTrends = await fetchGoogleTrends();
 
