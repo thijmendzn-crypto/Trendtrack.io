@@ -6,7 +6,9 @@ const hasClerkKeys = Boolean(process.env.CLERK_SECRET_KEY && process.env.NEXT_PU
 
 const protectedMiddleware = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
-    await auth.protect();
+    await auth.protect({
+      unauthenticatedUrl: "/sign-in",
+    });
   }
 });
 
