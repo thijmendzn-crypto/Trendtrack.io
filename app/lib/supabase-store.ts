@@ -54,17 +54,18 @@ function rowToWorkspace(row: WorkspaceRow | null): WorkspaceState {
 export async function readSupabaseWorkspace(actorId: string): Promise<WorkspaceState | null> {
   if (!isSupabaseConfigured()) return null;
 
-  const { data, error } = await getSupabase()
-    .from("workspaces")
-    .select("actor_id,saved,leads,checkout_sessions,store_connected")
-    .eq("actor_id", actorId)
-    .maybeSingle<WorkspaceRow>();
+  try {
+    const { data, error } = await getSupabase()
+      .from("workspaces")
+      .select("actor_id,saved,leads,checkout_sessions,store_connected")
+      .eq("actor_id", actorId)
+      .maybeSingle<WorkspaceRow>();
 
-  if (error) {
-    throw error;
+    if (error) return null;
+    return rowToWorkspace(data);
+  } catch {
+    return null;
   }
-
-  return rowToWorkspace(data);
 }
 
 export async function updateSupabaseWorkspace(
@@ -76,24 +77,25 @@ export async function updateSupabaseWorkspace(
   const current = (await readSupabaseWorkspace(actorId)) || defaultWorkspace;
   const next = await updater(current);
 
-  const { data, error } = await getSupabase()
-    .from("workspaces")
-    .upsert(
-      {
-        actor_id: actorId,
-        saved: next.saved,
-        leads: next.leads,
-        checkout_sessions: next.checkoutSessions,
-        store_connected: next.storeConnected,
-      },
-      { onConflict: "actor_id" },
-    )
-    .select("actor_id,saved,leads,checkout_sessions,store_connected")
-    .single<WorkspaceRow>();
+  try {
+    const { data, error } = await getSupabase()
+      .from("workspaces")
+      .upsert(
+        {
+          actor_id: actorId,
+          saved: next.saved,
+          leads: next.leads,
+          checkout_sessions: next.checkoutSessions,
+          store_connected: next.storeConnected,
+        },
+        { onConflict: "actor_id" },
+      )
+      .select("actor_id,saved,leads,checkout_sessions,store_connected")
+      .single<WorkspaceRow>();
 
-  if (error) {
-    throw error;
+    if (error) return next;
+    return rowToWorkspace(data);
+  } catch {
+    return next;
   }
-
-  return rowToWorkspace(data);
 }

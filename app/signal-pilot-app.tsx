@@ -66,10 +66,13 @@ async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+type ShopTab = "all" | "gems" | "scaling" | "leaders" | "adpeak";
+
 export function SignalPilotApp() {
   const [route, setRoute] = useState<Route>("shops");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [shopTab, setShopTab] = useState<ShopTab>("all");
   const [shops, setShops] = useState<Shop[]>([]);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
@@ -114,9 +117,15 @@ export function SignalPilotApp() {
     return shops.filter((shop) => {
       const matchesSearch = !needle || Object.values(shop).join(" ").toLowerCase().includes(needle);
       const matchesCategory = category === "all" || shop.category === category;
-      return matchesSearch && matchesCategory;
+      const matchesTab =
+        shopTab === "all" ||
+        (shopTab === "gems" && shop.metaAds < 10 && shop.traffic.at(-1)! > shop.traffic[0]) ||
+        (shopTab === "scaling" && shop.metaAds >= 10) ||
+        (shopTab === "leaders" && shop.monthlyVisits.includes("M")) ||
+        (shopTab === "adpeak" && shop.adTrend.at(-1)! > shop.adTrend[0]);
+      return matchesSearch && matchesCategory && matchesTab;
     });
-  }, [category, query, shops]);
+  }, [category, query, shops, shopTab]);
 
   const categories = useMemo(() => Array.from(new Set(shops.map((shop) => shop.category))), [shops]);
   const heroShop = filteredShops[0] || shops[0];
@@ -253,9 +262,22 @@ export function SignalPilotApp() {
         {!isLoading && route === "shops" && (
           <section className="shops-view" aria-label="Shops">
             <div className="tab-strip">
-              {["All Shops", "Weekly Gems", "Top Scaling", "Market Leaders & DTC Brands", "Shop's Ad Peak"].map((tab, index) => (
-                <button className={`tab-button ${index === 0 ? "active" : ""}`} key={tab} type="button">
-                  {tab}
+              {(
+                [
+                  ["All Shops", "all"],
+                  ["Weekly Gems", "gems"],
+                  ["Top Scaling", "scaling"],
+                  ["Market Leaders & DTC Brands", "leaders"],
+                  ["Shop's Ad Peak", "adpeak"],
+                ] as [string, ShopTab][]
+              ).map(([label, value]) => (
+                <button
+                  className={`tab-button ${shopTab === value ? "active" : ""}`}
+                  key={value}
+                  type="button"
+                  onClick={() => setShopTab(value)}
+                >
+                  {label}
                 </button>
               ))}
             </div>
