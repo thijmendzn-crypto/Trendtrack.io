@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import type { Ad, AssistantMessage, AssistantResponse, Lead, Shop, Signal, WorkspaceState } from "./lib/types";
 
 type Route = "home" | "shops" | "ads" | "emails" | "trends" | "assistant" | "billing";
@@ -54,7 +53,6 @@ async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function SignalPilotApp() {
-  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const [route, setRoute] = useState<Route>("shops");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -109,7 +107,7 @@ export function SignalPilotApp() {
   const categories = useMemo(() => Array.from(new Set(shops.map((shop) => shop.category))), [shops]);
   const heroShop = filteredShops[0] || shops[0];
   const totalAds = shops.reduce((total, shop) => total + shop.metaAds, 0);
-  const storeStatus = storeConnected ? "Store connected" : clerkConfigured ? "Private workspace" : "Demo workspace";
+  const storeStatus = storeConnected ? "Store connected" : "Demo workspace";
 
   const connectStore = async () => {
     setStoreConnected(true);
@@ -227,7 +225,6 @@ export function SignalPilotApp() {
             <button className="icon-button" type="button" aria-label="Open AI assistant" onClick={() => setRoute("assistant")}>
               AI
             </button>
-            <AuthControls configured={clerkConfigured} />
           </div>
         </header>
 
@@ -446,27 +443,6 @@ function navIcon(route: Route) {
   return icons[route];
 }
 
-function AuthControls({ configured }: { configured: boolean }) {
-  if (!configured) {
-    return <span className="auth-pill">Demo auth</span>;
-  }
-
-  return (
-    <div className="auth-actions">
-      <SignInButton mode="modal">
-        <button className="secondary-button" type="button">
-          Login
-        </button>
-      </SignInButton>
-      <SignUpButton mode="modal">
-        <button className="primary-button" type="button">
-          Start
-        </button>
-      </SignUpButton>
-      <UserButton />
-    </div>
-  );
-}
 
 function ShopTable({ shops }: { shops: Shop[] }) {
   return (

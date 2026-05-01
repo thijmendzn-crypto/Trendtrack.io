@@ -1,24 +1,8 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
-import { hasRealClerkKeys } from "./app/lib/env";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
-const hasClerkKeys = hasRealClerkKeys();
-
-const protectedMiddleware = clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect({
-      unauthenticatedUrl: "/sign-in",
-    });
-  }
-});
-
-export default function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (!hasClerkKeys) {
-    return NextResponse.next();
-  }
-
-  return protectedMiddleware(request, event);
+export default function proxy(_request: NextRequest) {
+  return NextResponse.next();
 }
 
 export const config = {
