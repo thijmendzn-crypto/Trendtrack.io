@@ -4,9 +4,13 @@ Next.js MVP for an e-commerce trend intelligence SaaS.
 
 ## What works now
 
-- Dashboard, signal explorer, ad library, AI analyst and billing screens
+- Clerk sign-in/sign-up pages with Google/Gmail support when enabled in Clerk
+- Shops intelligence dashboard with filters, product images, ad images and email creative slots
+- Ads, email, trends, AI assistant and billing screens
 - API-backed app state through Next.js Route Handlers
 - Local file-backed persistence for watchlist, leads, checkout sessions and store connection
+- Supabase-ready persistence when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured
+- AI assistant endpoint at `/api/assistant`, using `OPENAI_API_KEY` when configured and local fallback logic otherwise
 - Demo AI analyst responses via `/api/analyst`
 - Demo checkout session creation via `/api/checkout`
 - Health endpoint at `/api/health`
@@ -18,7 +22,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`.
+Open `http://localhost:3000`.
 
 ## Verify
 
@@ -33,8 +37,9 @@ Copy `.env.example` to `.env.local` when adding real services.
 
 Next production steps:
 
-- Add Clerk for real login/signup
-- Replace `.data/store.json` with Postgres/Supabase/Neon
+- Enable Google in the Clerk dashboard and add the Clerk env vars to Vercel
+- Run `supabase/schema.sql` in Supabase SQL editor and add the Supabase env vars
+- Replace demo shop/media data with real data sources for storefront images, Meta ads and email archives
 - Replace demo checkout with Stripe Checkout
-- Replace demo analyst with OpenAI API
+- Add `OPENAI_API_KEY` to Vercel for the AI assistant
 - Deploy to Vercel and set environment variables

@@ -1,4 +1,4 @@
-import type { Ad, AnalystResult, Signal } from "./types";
+import type { Ad, AnalystResult, Shop, Signal } from "./types";
 
 export const signals: Signal[] = [
   {
@@ -133,6 +133,145 @@ export const ads: Ad[] = [
     spend: "Testing",
     format: "Routine stack",
     lift: "+16%",
+  },
+];
+
+export const shops: Shop[] = [
+  {
+    id: 1,
+    name: "Obvi",
+    domain: "myobvi.com",
+    logoUrl:
+      "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=320&q=80",
+    storefrontUrl:
+      "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=640&q=80",
+    category: "Beauty & Fitness",
+    country: "US",
+    currency: "USD",
+    monthlyVisits: "83K",
+    metaAds: 49,
+    liveAds: 128,
+    products: 53,
+    trustpilot: "4.7",
+    traffic: [18, 31, 28, 42, 44, 37, 52, 49],
+    adTrend: [22, 25, 28, 36, 39, 43, 46, 52],
+    bestSellers: [
+      "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=220&q=80",
+    ],
+    adImages: [
+      "https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=220&q=80",
+    ],
+    emailImages: [
+      "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=220&q=80",
+    ],
+    insight: "High creative velocity around supplements, beauty bundles and repeat-purchase offers.",
+  },
+  {
+    id: 2,
+    name: "Obvious Golf Co.",
+    domain: "obviousgolfco.com",
+    logoUrl:
+      "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&w=320&q=80",
+    storefrontUrl:
+      "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=640&q=80",
+    category: "Apparel",
+    country: "UK",
+    currency: "GBP",
+    monthlyVisits: "38K",
+    metaAds: 94,
+    liveAds: 74,
+    products: 13,
+    trustpilot: "4.5",
+    traffic: [52, 44, 35, 42, 39, 46, 32, 29],
+    adTrend: [30, 58, 21, 42, 17, 33, 27, 31],
+    bestSellers: [
+      "https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1621993202323-f438eec93417?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=220&q=80",
+    ],
+    adImages: [
+      "https://images.unsplash.com/photo-1591491653056-4f3c1c64656d?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1611374243147-44a70293d44c?auto=format&fit=crop&w=220&q=80",
+    ],
+    emailImages: [
+      "https://images.unsplash.com/photo-1592919505780-303950717480?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1519311965067-36d3e5f33d39?auto=format&fit=crop&w=220&q=80",
+    ],
+    insight: "Ad spikes suggest a narrow seasonal push with strong product visual proof.",
+  },
+  {
+    id: 3,
+    name: "Obvious Mimic Press",
+    domain: "obviousmimic.com",
+    logoUrl:
+      "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=320&q=80",
+    storefrontUrl:
+      "https://images.unsplash.com/photo-1526243741027-444d633d7365?auto=format&fit=crop&w=640&q=80",
+    category: "Books & Literature",
+    country: "BR",
+    currency: "USD",
+    monthlyVisits: "58K",
+    metaAds: 3,
+    liveAds: 18,
+    products: 66,
+    trustpilot: "4.2",
+    traffic: [26, 39, 33, 28, 47, 41, 29, 44],
+    adTrend: [41, 48, 12, 39, 35, 14, 9, 10],
+    bestSellers: [
+      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=220&q=80",
+    ],
+    adImages: [
+      "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=220&q=80",
+    ],
+    emailImages: [
+      "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=220&q=80",
+    ],
+    insight: "Low ad count but strong catalog depth; email drops matter more than paid spend here.",
+  },
+  {
+    id: 4,
+    name: "Obvious State",
+    domain: "obviousstate.com",
+    logoUrl:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=320&q=80",
+    storefrontUrl:
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=640&q=80",
+    category: "Home & Gifts",
+    country: "CA",
+    currency: "USD",
+    monthlyVisits: "22K",
+    metaAds: 0,
+    liveAds: 9,
+    products: 110,
+    trustpilot: "4.6",
+    traffic: [22, 24, 19, 31, 27, 35, 23, 30],
+    adTrend: [44, 40, 38, 31, 28, 21, 16, 9],
+    bestSellers: [
+      "https://images.unsplash.com/photo-1512692723619-8b3e68365c9c?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=220&q=80",
+    ],
+    adImages: [
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&w=220&q=80",
+    ],
+    emailImages: [
+      "https://images.unsplash.com/photo-1512295767273-ac109ac3acfa?auto=format&fit=crop&w=220&q=80",
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=220&q=80",
+    ],
+    insight: "Traffic is stable while ads are quiet, a good target for organic or email research.",
   },
 ];
 

@@ -20,6 +20,28 @@ export type Ad = {
   lift: string;
 };
 
+export type Shop = {
+  id: number;
+  name: string;
+  domain: string;
+  logoUrl: string;
+  storefrontUrl: string;
+  category: string;
+  country: string;
+  currency: string;
+  monthlyVisits: string;
+  metaAds: number;
+  liveAds: number;
+  products: number;
+  trustpilot: string;
+  traffic: number[];
+  adTrend: number[];
+  bestSellers: string[];
+  adImages: string[];
+  emailImages: string[];
+  insight: string;
+};
+
 export type Lead = {
   id: string;
   name: string;
@@ -50,4 +72,16 @@ export type AnalystResult = {
   prompt: string;
   response: string;
   plan: string[];
+};
+
+export type AssistantMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type AssistantResponse = {
+  message: AssistantMessage;
+  suggestions: string[];
+  source: "openai" | "local";
 };

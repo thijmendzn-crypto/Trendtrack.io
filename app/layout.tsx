@@ -3,9 +3,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SignalPilot App - Ecom trend intelligence",
+  title: "Trendtrack - Ecom intelligence app",
   description:
-    "SignalPilot is an e-commerce trend intelligence app for signals, ads, competitors, and launch planning.",
+    "Trendtrack is an e-commerce intelligence app for shops, ads, email campaigns, trends, and AI research.",
 };
 
 export default function RootLayout({

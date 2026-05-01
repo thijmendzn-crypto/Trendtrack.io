@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ads, buildAnalystResult, creativeBrief, signals } from "@/app/lib/demo-data";
+import { ads, buildAnalystResult, creativeBrief, shops, signals } from "@/app/lib/demo-data";
 import { getActorId, UnauthorizedError } from "@/app/lib/auth";
 import { readWorkspace } from "@/app/lib/file-store";
 
@@ -14,6 +14,7 @@ export async function GET() {
       ads,
       analyst: buildAnalystResult("Find a product angle for recovery and sleep buyers"),
       creativeBrief,
+      shops,
       signals,
       store,
     });

@@ -1,5 +1,5 @@
-import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import { AuthFrame } from "@/app/auth/AuthFrame";
 
 export default function SignUpPage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -22,9 +22,7 @@ export default function SignUpPage() {
 
   return (
     <main className="auth-page">
-      <div className="clerk-shell">
-        <SignUp />
-      </div>
+      <AuthFrame mode="sign-up" />
     </main>
   );
 }

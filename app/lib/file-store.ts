@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { readSupabaseWorkspace, updateSupabaseWorkspace } from "./supabase-store";
 import type { StoreState, WorkspaceState } from "./types";
 
 const storePath = path.join(process.cwd(), ".data", "store.json");
@@ -65,6 +66,9 @@ export async function updateStore(updater: (store: StoreState) => StoreState | P
 }
 
 export async function readWorkspace(actorId: string): Promise<WorkspaceState> {
+  const supabaseWorkspace = await readSupabaseWorkspace(actorId);
+  if (supabaseWorkspace) return supabaseWorkspace;
+
   const store = await readStore();
   return { ...defaultWorkspace, ...(store.workspaces[actorId] || {}) };
 }
@@ -73,6 +77,9 @@ export async function updateWorkspace(
   actorId: string,
   updater: (workspace: WorkspaceState) => WorkspaceState | Promise<WorkspaceState>,
 ) {
+  const supabaseWorkspace = await updateSupabaseWorkspace(actorId, updater);
+  if (supabaseWorkspace) return supabaseWorkspace;
+
   const store = await updateStore(async (current) => {
     const currentWorkspace = { ...defaultWorkspace, ...(current.workspaces[actorId] || {}) };
     const nextWorkspace = await updater(currentWorkspace);
