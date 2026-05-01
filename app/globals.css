@@ -246,8 +246,24 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
   gap: 10px;
   width: min(100%, 700px);
+}
+
+.auth-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  border-radius: 8px;
+  color: var(--soft);
+  font-weight: 900;
 }
 
 .global-search {
@@ -762,6 +778,43 @@ output {
   min-height: 34px;
   padding: 0;
   font-size: 22px;
+}
+
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-fallback {
+  display: grid;
+  width: min(520px, 100%);
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(11, 21, 18, 0.9);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.auth-fallback h1,
+.auth-fallback p {
+  margin: 0;
+}
+
+.auth-fallback p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.auth-fallback .primary-button {
+  width: fit-content;
+  text-decoration: none;
+}
+
+.clerk-root {
+  margin: 0 auto;
 }
 
 @media (max-width: 1120px) {

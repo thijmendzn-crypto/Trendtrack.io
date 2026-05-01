@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import type { Ad, AnalystResult, Lead, Signal, StoreState } from "./lib/types";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import type { Ad, AnalystResult, Lead, Signal, WorkspaceState } from "./lib/types";
 
 type Route = "dashboard" | "signals" | "ads" | "analyst" | "billing";
 
@@ -10,7 +11,7 @@ type BootstrapPayload = {
   analyst: AnalystResult;
   creativeBrief: string[];
   signals: Signal[];
-  store: StoreState;
+  store: WorkspaceState;
 };
 
 const chartRanges = {
@@ -63,6 +64,7 @@ async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function SignalPilotApp() {
+  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const [route, setRoute] = useState<Route>("dashboard");
   const [range, setRange] = useState<keyof typeof chartRanges>("7");
   const [query, setQuery] = useState("");
@@ -91,9 +93,9 @@ export function SignalPilotApp() {
         if (!active) return;
         setSignals(payload.signals);
         setAds(payload.ads);
-        setSaved(payload.store.saved);
-        setLeads(payload.store.leads);
-        setStoreConnected(payload.store.storeConnected);
+        setSaved(payload.store?.saved || []);
+        setLeads(payload.store?.leads || []);
+        setStoreConnected(Boolean(payload.store?.storeConnected));
         setCreativeBrief(payload.creativeBrief);
         setAnalyst(payload.analyst);
         setPrompt(payload.analyst.prompt);
@@ -135,7 +137,7 @@ export function SignalPilotApp() {
   const savedSignals = signals.filter((signal) => saved.includes(signal.id));
   const chartValues = chartRanges[range];
   const opportunityScore = Math.round(chartValues.at(-1)! - 7);
-  const storeStatus = storeConnected ? "Shopify connected" : "Demo workspace";
+  const storeStatus = storeConnected ? "Shopify connected" : clerkConfigured ? "Private workspace" : "Demo workspace";
 
   const toggleSaved = async (id: number) => {
     const previous = saved;
@@ -249,7 +251,7 @@ export function SignalPilotApp() {
         <section className="workspace-card" aria-label="Current workspace">
           <span className="workspace-dot" />
           <div>
-            <strong>North Basket</strong>
+            <WorkspaceIdentity configured={clerkConfigured} />
             <small>{storeStatus}</small>
           </div>
         </section>
@@ -290,6 +292,7 @@ export function SignalPilotApp() {
             <button className="primary-button" type="button" onClick={() => setUpgradeOpen(true)}>
               Upgrade
             </button>
+            <AuthControls configured={clerkConfigured} />
           </div>
         </header>
 
@@ -596,6 +599,40 @@ function Kpi({ label, note, value }: { label: string; note: string; value: numbe
       <strong>{value}</strong>
       <small>{note}</small>
     </article>
+  );
+}
+
+function WorkspaceIdentity({ configured }: { configured: boolean }) {
+  if (!configured) {
+    return <strong>North Basket</strong>;
+  }
+
+  return <strong>Private workspace</strong>;
+}
+
+function AuthControls({ configured }: { configured: boolean }) {
+  if (!configured) {
+    return <span className="auth-pill">Demo auth</span>;
+  }
+
+  return <ClerkAuthControls />;
+}
+
+function ClerkAuthControls() {
+  return (
+    <div className="auth-actions">
+      <SignInButton mode="modal">
+        <button className="secondary-button" type="button">
+          Login
+        </button>
+      </SignInButton>
+      <SignUpButton mode="modal">
+        <button className="primary-button" type="button">
+          Sign up
+        </button>
+      </SignUpButton>
+      <UserButton />
+    </div>
   );
 }
 

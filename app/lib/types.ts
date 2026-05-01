@@ -35,11 +35,15 @@ export type CheckoutSession = {
   createdAt: string;
 };
 
-export type StoreState = {
+export type WorkspaceState = {
   saved: number[];
   leads: Lead[];
   checkoutSessions: CheckoutSession[];
   storeConnected: boolean;
+};
+
+export type StoreState = {
+  workspaces: Record<string, WorkspaceState>;
 };
 
 export type AnalystResult = {
