@@ -65,7 +65,7 @@ export function SignalPilotApp() {
   const [storeConnected, setStoreConnected] = useState(false);
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>(defaultAssistant);
   const [assistantPrompt, setAssistantPrompt] = useState("Which shop should I research first?");
-  const [assistantSource, setAssistantSource] = useState<"openai" | "local">("local");
+  const [assistantSource, setAssistantSource] = useState<"groq" | "openai" | "local">("local");
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -567,7 +567,7 @@ function AssistantPanel({
   onPromptChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   prompt: string;
-  source: "openai" | "local";
+  source: "groq" | "openai" | "local";
 }) {
   return (
     <section className="assistant-layout">
@@ -577,7 +577,9 @@ function AssistantPanel({
             <span className="section-kicker">Research copilot</span>
             <h2>AI Assistant</h2>
           </div>
-          <span className="source-pill">{source === "openai" ? "OpenAI connected" : "Local fallback"}</span>
+          <span className="source-pill">
+            {source === "groq" ? "Groq connected" : source === "openai" ? "OpenAI connected" : "Local fallback"}
+          </span>
         </div>
 
         <div className="chat-log">

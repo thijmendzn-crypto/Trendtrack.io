@@ -15,6 +15,20 @@ type OpenAIResponse = {
   }>;
 };
 
+type GroqChatResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+};
+
+function assistantContext(prompt: string) {
+  return `User question: ${prompt}\n\nAvailable shops:\n${shops
+    .map((shop) => `${shop.name}: ${shop.category}, ${shop.monthlyVisits} visits, ${shop.metaAds} Meta ads. ${shop.insight}`)
+    .join("\n")}`;
+}
+
 function localAssistant(prompt: string): string {
   const input = prompt.toLowerCase();
   const topShop = shops[0];
@@ -61,9 +75,7 @@ async function runOpenAI(prompt: string) {
       model: "gpt-5.1-mini",
       instructions:
         "You are the in-app AI assistant for an ecommerce trend intelligence SaaS. Be concise, practical, and focus on shops, ads, email campaigns, products, and launch actions.",
-      input: `User question: ${prompt}\n\nAvailable shops:\n${shops
-        .map((shop) => `${shop.name}: ${shop.category}, ${shop.monthlyVisits} visits, ${shop.metaAds} Meta ads. ${shop.insight}`)
-        .join("\n")}`,
+      input: assistantContext(prompt),
     }),
   });
 
@@ -73,6 +85,40 @@ async function runOpenAI(prompt: string) {
 
   const payload = (await response.json()) as OpenAIResponse;
   return extractOpenAIText(payload);
+}
+
+async function runGroq(prompt: string) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return null;
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are the in-app AI assistant for an ecommerce trend intelligence SaaS. Be concise, practical, and focus on shops, ads, email campaigns, products, and launch actions.",
+        },
+        {
+          role: "user",
+          content: assistantContext(prompt),
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json()) as GroqChatResponse;
+  return payload.choices?.[0]?.message?.content?.trim() || null;
 }
 
 export async function POST(request: NextRequest) {
@@ -85,15 +131,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
-    const openAIText = await runOpenAI(prompt);
+    const groqText = await runGroq(prompt);
+    const openAIText = groqText ? null : await runOpenAI(prompt);
     const response: AssistantResponse = {
       message: {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: openAIText || localAssistant(prompt),
+        content: groqText || openAIText || localAssistant(prompt),
       },
       suggestions: ["Analyze this shop", "Find winning email angles", "Write outreach copy"],
-      source: openAIText ? "openai" : "local",
+      source: groqText ? "groq" : openAIText ? "openai" : "local",
     };
 
     return NextResponse.json(response);
