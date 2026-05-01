@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SignalPilot App - Ecom trend intelligence</title>
+    <meta
+      name="description"
+      content="SignalPilot is een e-commerce trend intelligence app voor signalen, advertenties, concurrenten en launch planning."
+    >
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="App navigation">
+        <a class="brand" href="#dashboard" data-route="dashboard" aria-label="SignalPilot dashboard">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <strong>SignalPilot</strong>
+            <small>Growth OS</small>
+          </span>
+        </a>
+
+        <nav class="nav-list">
+          <button class="nav-item active" type="button" data-route="dashboard">Dashboard</button>
+          <button class="nav-item" type="button" data-route="signals">Signals</button>
+          <button class="nav-item" type="button" data-route="ads">Ad Library</button>
+          <button class="nav-item" type="button" data-route="analyst">AI Analyst</button>
+          <button class="nav-item" type="button" data-route="billing">Billing</button>
+        </nav>
+
+        <section class="workspace-card" aria-label="Current workspace">
+          <span class="workspace-dot"></span>
+          <div>
+            <strong>North Basket</strong>
+            <small id="storeStatus">Demo workspace</small>
+          </div>
+        </section>
+
+        <section class="usage-card" aria-label="Plan usage">
+          <div>
+            <span>Signals used</span>
+            <strong>1,842 / 2,500</strong>
+          </div>
+          <div class="usage-bar"><span></span></div>
+          <button class="secondary-button full" type="button" data-open-upgrade>Upgrade</button>
+        </section>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Today’s market radar</p>
+            <h1 id="viewTitle">Command center</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="global-search">
+              <span class="sr-only">Search</span>
+              <input id="globalSearch" type="search" placeholder="Search product, niche, brand">
+            </label>
+            <button class="secondary-button" type="button" id="connectButton">Connect store</button>
+            <button class="primary-button" type="button" data-open-upgrade>Upgrade</button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboard" aria-labelledby="viewTitle">
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <span>Opportunity score</span>
+              <strong id="opportunityScore">87</strong>
+              <small>+12 this week</small>
+            </article>
+            <article class="kpi-card">
+              <span>Winning angles</span>
+              <strong>36</strong>
+              <small>14 ready to test</small>
+            </article>
+            <article class="kpi-card">
+              <span>Competitor moves</span>
+              <strong>128</strong>
+              <small>7 budget spikes</small>
+            </article>
+            <article class="kpi-card">
+              <span>Saved signals</span>
+              <strong id="savedCount">0</strong>
+              <small>Synced to watchlist</small>
+            </article>
+          </div>
+
+          <div class="dashboard-layout">
+            <section class="panel chart-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Momentum forecast</h2>
+                  <p>Category velocity by source and buyer intent.</p>
+                </div>
+                <div class="segmented" aria-label="Time range">
+                  <button class="segment active" type="button" data-range="7">7d</button>
+                  <button class="segment" type="button" data-range="30">30d</button>
+                  <button class="segment" type="button" data-range="90">90d</button>
+                </div>
+              </div>
+              <div class="chart" id="forecastChart" aria-label="Momentum chart"></div>
+            </section>
+
+            <section class="panel watchlist-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Watchlist</h2>
+                  <p>Highest priority saved signals.</p>
+                </div>
+                <span class="live-pill">Live</span>
+              </div>
+              <div class="watchlist" id="watchlist"></div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Hot opportunities</h2>
+                <p>Sorted by intent, speed and competitive whitespace.</p>
+              </div>
+              <button class="secondary-button" type="button" data-route="signals">Open signals</button>
+            </div>
+            <div class="table" id="opportunityTable"></div>
+          </section>
+        </section>
+
+        <section class="view" id="signals" aria-labelledby="viewTitle">
+          <div class="tool-row">
+            <label>
+              Market
+              <select id="marketFilter">
+                <option value="all">All markets</option>
+                <option value="Beauty">Beauty</option>
+                <option value="Home">Home</option>
+                <option value="Pets">Pets</option>
+                <option value="Fitness">Fitness</option>
+                <option value="Tech">Tech</option>
+              </select>
+            </label>
+            <label>
+              Source
+              <select id="sourceFilter">
+                <option value="all">All sources</option>
+                <option value="TikTok">TikTok</option>
+                <option value="Meta">Meta</option>
+                <option value="Search">Search</option>
+                <option value="Amazon">Amazon</option>
+              </select>
+            </label>
+            <label>
+              Minimum score
+              <input id="scoreFilter" type="range" min="50" max="95" value="70">
+            </label>
+            <output id="scoreOutput" for="scoreFilter">70+</output>
+          </div>
+          <div class="signal-grid" id="signalGrid"></div>
+        </section>
+
+        <section class="view" id="ads" aria-labelledby="viewTitle">
+          <div class="ad-layout">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Ad intelligence</h2>
+                  <p>Creative patterns gaining spend across active campaigns.</p>
+                </div>
+                <button class="primary-button" type="button" id="scanAdsButton">Scan ads</button>
+              </div>
+              <div class="ad-grid" id="adGrid"></div>
+            </section>
+            <aside class="panel insight-panel">
+              <h2>Creative brief</h2>
+              <div id="creativeBrief"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="analyst" aria-labelledby="viewTitle">
+          <div class="analyst-layout">
+            <section class="panel chat-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>AI market analyst</h2>
+                  <p>Turns live signals into a launch plan.</p>
+                </div>
+              </div>
+              <div class="chat-log" id="chatLog"></div>
+              <form class="prompt-form" id="promptForm">
+                <input name="prompt" type="text" value="Find a product angle for recovery and sleep buyers">
+                <button class="primary-button" type="submit">Run</button>
+              </form>
+            </section>
+            <aside class="panel launch-plan">
+              <h2>Launch plan</h2>
+              <ol id="launchPlan"></ol>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="billing" aria-labelledby="viewTitle">
+          <div class="pricing-grid">
+            <article class="price-card">
+              <span>Scout</span>
+              <strong>EUR 39<small>/mo</small></strong>
+              <p>For product hunters validating niches.</p>
+              <button class="secondary-button full" type="button" data-plan="Scout">Choose Scout</button>
+            </article>
+            <article class="price-card featured">
+              <span>Growth</span>
+              <strong>EUR 99<small>/mo</small></strong>
+              <p>For brands launching weekly campaigns.</p>
+              <button class="primary-button full" type="button" data-plan="Growth">Choose Growth</button>
+            </article>
+            <article class="price-card">
+              <span>Studio</span>
+              <strong>EUR 249<small>/mo</small></strong>
+              <p>For agencies and multi-store teams.</p>
+              <button class="secondary-button full" type="button" data-plan="Studio">Choose Studio</button>
+            </article>
+          </div>
+
+          <section class="panel lead-panel">
+            <div>
+              <h2>Trial requests</h2>
+              <p id="leadSummary">No requests yet.</p>
+            </div>
+            <form class="lead-form" id="leadForm">
+              <label>
+                Name
+                <input name="name" type="text" required placeholder="Your name">
+              </label>
+              <label>
+                Email
+                <input name="email" type="email" required placeholder="name@company.com">
+              </label>
+              <label>
+                Plan
+                <select name="plan" id="leadPlan">
+                  <option>Scout</option>
+                  <option selected>Growth</option>
+                  <option>Studio</option>
+                </select>
+              </label>
+              <button class="primary-button" type="submit">Save request</button>
+            </form>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="upgrade-modal" id="upgradeModal">
+      <form method="dialog" class="modal-card">
+        <button class="close-button" value="cancel" aria-label="Close">×</button>
+        <span class="modal-kicker">Growth plan</span>
+        <h2>Unlock the full research engine</h2>
+        <p>2,500 monthly signals, unlimited watchlists, ad scans, AI launch plans and team seats.</p>
+        <div class="modal-actions">
+          <button class="primary-button" value="upgrade">Request upgrade</button>
+          <button class="secondary-button" value="cancel">Maybe later</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
