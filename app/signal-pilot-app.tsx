@@ -38,9 +38,23 @@ const defaultAssistant: AssistantMessage[] = [
   },
 ];
 
+function getVisitorId(): string {
+  const key = "tt_visitor_id";
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const visitorId = typeof window !== "undefined" ? getVisitorId() : "ssr";
   const response = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-visitor-id": visitorId,
+    },
     ...init,
   });
 
@@ -107,7 +121,7 @@ export function SignalPilotApp() {
   const categories = useMemo(() => Array.from(new Set(shops.map((shop) => shop.category))), [shops]);
   const heroShop = filteredShops[0] || shops[0];
   const totalAds = shops.reduce((total, shop) => total + shop.metaAds, 0);
-  const storeStatus = storeConnected ? "Store connected" : "Demo workspace";
+  const storeStatus = storeConnected ? "Store connected" : "Your workspace";
 
   const connectStore = async () => {
     setStoreConnected(true);
