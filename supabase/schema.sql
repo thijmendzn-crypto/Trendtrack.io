@@ -1,3 +1,33 @@
+-- Shops: real Shopify stores
+create table if not exists public.shops (
+  id bigint generated always as identity primary key,
+  name text not null,
+  domain text unique not null,
+  logo_url text,
+  storefront_url text,
+  category text not null default 'General',
+  country text not null default 'US',
+  currency text not null default 'USD',
+  monthly_visits text not null default 'Unknown',
+  meta_ads integer not null default 0,
+  live_ads integer not null default 0,
+  products integer not null default 0,
+  trustpilot text not null default 'N/A',
+  traffic integer[] not null default '{}',
+  ad_trend integer[] not null default '{}',
+  best_sellers text[] not null default '{}',
+  ad_images text[] not null default '{}',
+  email_images text[] not null default '{}',
+  insight text not null default '',
+  refreshed_at timestamptz not null default now()
+);
+
+alter table public.shops enable row level security;
+drop policy if exists "service role manages shops" on public.shops;
+create policy "service role manages shops" on public.shops for all to service_role using (true) with check (true);
+drop policy if exists "public read shops" on public.shops;
+create policy "public read shops" on public.shops for select to anon using (true);
+
 -- Signals: trending products from Amazon + Google Trends
 create table if not exists public.signals (
   id bigint generated always as identity primary key,

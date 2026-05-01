@@ -4,6 +4,7 @@ import { fetchAmazonTrends } from "@/app/lib/fetchers/amazon";
 import { fetchGoogleTrends } from "@/app/lib/fetchers/google-trends";
 import { fetchMetaAds } from "@/app/lib/fetchers/meta-ads";
 import { fetchMilledEmails } from "@/app/lib/fetchers/milled";
+import { fetchShops } from "@/app/lib/fetchers/shops";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -82,7 +83,40 @@ export async function GET(request: NextRequest) {
       log.push("ads: skipped (no META_AD_LIBRARY_TOKEN or no results)");
     }
 
-    // 3. Fetch Milled emails
+    // 3. Fetch real Shopify stores
+    const shopData = await fetchShops();
+    if (shopData.length > 0) {
+      await db.from("shops").delete().neq("id", 0);
+      const { error: shopsError } = await db.from("shops").insert(
+        shopData.map((shop) => ({
+          name: shop.name,
+          domain: shop.domain,
+          logo_url: shop.logoUrl,
+          storefront_url: shop.storefrontUrl,
+          category: shop.category,
+          country: shop.country,
+          currency: shop.currency,
+          monthly_visits: "Unknown",
+          meta_ads: 0,
+          live_ads: 0,
+          products: shop.products,
+          trustpilot: "N/A",
+          traffic: [20, 22, 21, 25, 24, 28, 30],
+          ad_trend: [2, 3, 3, 4, 4, 5, 5],
+          best_sellers: shop.bestSellers,
+          ad_images: shop.bestSellers.slice(0, 2),
+          email_images: [],
+          insight: shop.insight,
+          refreshed_at: new Date().toISOString(),
+        }))
+      );
+      if (shopsError) log.push(`shops error: ${shopsError.message}`);
+      else log.push(`shops: inserted ${shopData.length}`);
+    } else {
+      log.push("shops: no results");
+    }
+
+    // 4. Fetch Milled emails
     const emails = await fetchMilledEmails();
     if (emails.length > 0) {
       await db.from("emails").delete().neq("id", 0);

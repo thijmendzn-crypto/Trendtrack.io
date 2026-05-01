@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { ads as demoAds, buildAnalystResult, creativeBrief, shops, signals as demoSignals } from "@/app/lib/demo-data";
+import { ads as demoAds, buildAnalystResult, creativeBrief, shops as demoShops, signals as demoSignals } from "@/app/lib/demo-data";
 import { getActorId, UnauthorizedError } from "@/app/lib/auth";
 import { readWorkspace } from "@/app/lib/file-store";
-import type { Ad, Signal } from "@/app/lib/types";
+import type { Ad, Shop, Signal } from "@/app/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +12,43 @@ function supabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+async function getLiveShops(): Promise<Shop[]> {
+  try {
+    const db = supabase();
+    const { data } = await db
+      .from("shops")
+      .select("*")
+      .order("products", { ascending: false })
+      .limit(50);
+
+    if (!data || data.length === 0) return demoShops;
+
+    return data.map((row, index) => ({
+      id: index + 1,
+      name: row.name,
+      domain: row.domain,
+      logoUrl: row.logo_url || "",
+      storefrontUrl: row.storefront_url || "",
+      category: row.category,
+      country: row.country,
+      currency: row.currency,
+      monthlyVisits: row.monthly_visits,
+      metaAds: row.meta_ads,
+      liveAds: row.live_ads,
+      products: row.products,
+      trustpilot: row.trustpilot,
+      traffic: row.traffic || [10, 12, 11, 14, 13, 15, 16],
+      adTrend: row.ad_trend || [1, 1, 2, 2, 3, 3, 4],
+      bestSellers: row.best_sellers || [],
+      adImages: row.ad_images || [],
+      emailImages: row.email_images || [],
+      insight: row.insight,
+    }));
+  } catch {
+    return demoShops;
+  }
 }
 
 async function getLiveSignals(): Promise<Signal[]> {
@@ -69,7 +106,11 @@ export async function GET() {
     const actorId = await getActorId();
     const store = await readWorkspace(actorId);
 
-    const [signals, ads] = await Promise.all([getLiveSignals(), getLiveAds()]);
+    const [shops, signals, ads] = await Promise.all([
+      getLiveShops(),
+      getLiveSignals(),
+      getLiveAds(),
+    ]);
 
     return NextResponse.json({
       ads,
