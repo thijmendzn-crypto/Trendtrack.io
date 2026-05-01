@@ -79,7 +79,8 @@ export async function GET(request: NextRequest) {
       if (adsError) log.push(`ads error: ${adsError.message}`);
       else log.push(`ads: inserted ${metaAds.length}`);
     } else {
-      log.push("ads: skipped (no META_AD_LIBRARY_TOKEN or no results)");
+      const hasToken = Boolean(process.env.META_AD_LIBRARY_TOKEN);
+      log.push(`ads: 0 results (token present: ${hasToken})`);
     }
 
     // 3. Fetch real Shopify stores

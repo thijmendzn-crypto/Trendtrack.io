@@ -42,34 +42,38 @@ export async function fetchMetaAds(searchTerms: string[]): Promise<MetaAd[]> {
     const params = new URLSearchParams({
       access_token: token,
       ad_type: "ALL",
-      ad_reached_countries: '["US","GB","NL"]',
+      ad_reached_countries: "US",
       search_terms: term,
       fields: "id,page_name,ad_creative_bodies,ad_snapshot_url,spend",
       limit: "10",
       ad_active_status: "ACTIVE",
     });
 
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/ads_archive?${params.toString()}`,
-      { next: { revalidate: 0 } }
-    );
+    try {
+      const response = await fetch(
+        `https://graph.facebook.com/v21.0/ads_archive?${params.toString()}`,
+        { next: { revalidate: 0 } }
+      );
 
-    if (!response.ok) continue;
+      const payload = (await response.json()) as MetaAdLibraryResponse & { error?: { message: string } };
 
-    const payload = (await response.json()) as MetaAdLibraryResponse;
+      if ("error" in payload && payload.error) continue;
 
-    for (const ad of payload.data || []) {
-      const body = ad.ad_creative_bodies?.[0] || "";
-      results.push({
-        ad_id: ad.id,
-        brand: ad.page_name,
-        page_name: ad.page_name,
-        hook: body.slice(0, 120) || `${term} ad`,
-        image_url: null,
-        ad_url: ad.ad_snapshot_url,
-        spend: classifySpend(ad.spend?.lower_bound, ad.spend?.upper_bound),
-        format: body.includes("?") ? "Question hook" : body.length > 80 ? "Story" : "Direct",
-      });
+      for (const ad of payload.data || []) {
+        const body = ad.ad_creative_bodies?.[0] || "";
+        results.push({
+          ad_id: ad.id,
+          brand: ad.page_name,
+          page_name: ad.page_name,
+          hook: body.slice(0, 120) || `${term} ad`,
+          image_url: null,
+          ad_url: ad.ad_snapshot_url,
+          spend: classifySpend(ad.spend?.lower_bound, ad.spend?.upper_bound),
+          format: body.includes("?") ? "Question hook" : body.length > 80 ? "Story" : "Direct",
+        });
+      }
+    } catch {
+      continue;
     }
   }
 
