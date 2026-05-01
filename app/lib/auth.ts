@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { hasRealClerkKeys } from "./env";
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -7,7 +8,7 @@ export class UnauthorizedError extends Error {
 }
 
 export function isClerkConfigured() {
-  return Boolean(process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  return hasRealClerkKeys();
 }
 
 export async function getActorId() {

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { hasRealEnvValue } from "./env";
 import type { WorkspaceState } from "./types";
 
 type WorkspaceRow = {
@@ -17,7 +18,10 @@ const defaultWorkspace: WorkspaceState = {
 };
 
 function isSupabaseConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return (
+    hasRealEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL, ["https://"]) &&
+    hasRealEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY)
+  );
 }
 
 function getSupabase() {

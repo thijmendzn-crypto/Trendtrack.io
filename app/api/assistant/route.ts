@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorId, UnauthorizedError } from "@/app/lib/auth";
 import { shops, signals } from "@/app/lib/demo-data";
+import { hasRealEnvValue } from "@/app/lib/env";
 import type { AssistantResponse } from "@/app/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ function extractOpenAIText(payload: OpenAIResponse) {
 
 async function runOpenAI(prompt: string) {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
+  if (!hasRealEnvValue(apiKey, ["sk-"])) return null;
 
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -89,7 +90,7 @@ async function runOpenAI(prompt: string) {
 
 async function runGroq(prompt: string) {
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
+  if (!hasRealEnvValue(apiKey, ["gsk_"])) return null;
 
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
