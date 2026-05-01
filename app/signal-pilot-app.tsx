@@ -1,172 +1,17 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { Ad, AnalystResult, Lead, Signal, StoreState } from "./lib/types";
 
 type Route = "dashboard" | "signals" | "ads" | "analyst" | "billing";
-type SignalStatus = "hot" | "rising";
 
-type Signal = {
-  id: number;
-  name: string;
-  market: string;
-  source: string;
-  score: number;
-  intent: number;
-  speed: string;
-  status: SignalStatus;
-  angle: string;
+type BootstrapPayload = {
+  ads: Ad[];
+  analyst: AnalystResult;
+  creativeBrief: string[];
+  signals: Signal[];
+  store: StoreState;
 };
-
-type Ad = {
-  brand: string;
-  hook: string;
-  spend: string;
-  format: string;
-  lift: string;
-};
-
-type Lead = {
-  name: string;
-  email: string;
-  plan: string;
-  createdAt: string;
-};
-
-const signals: Signal[] = [
-  {
-    id: 1,
-    name: "Post-workout recovery gummies",
-    market: "Fitness",
-    source: "TikTok",
-    score: 94,
-    intent: 87,
-    speed: "+48%",
-    status: "hot",
-    angle: "Creator routines focus on soreness, sleep quality and next-day energy.",
-  },
-  {
-    id: 2,
-    name: "Pet hair air purifier filters",
-    market: "Pets",
-    source: "Search",
-    score: 89,
-    intent: 82,
-    speed: "+36%",
-    status: "hot",
-    angle: "Searches cluster around allergies, odor and rental apartments.",
-  },
-  {
-    id: 3,
-    name: "Heatless curl travel kits",
-    market: "Beauty",
-    source: "Meta",
-    score: 86,
-    intent: 78,
-    speed: "+29%",
-    status: "rising",
-    angle: "Ads with before/after visuals hold attention above category average.",
-  },
-  {
-    id: 4,
-    name: "Under-desk walking pads",
-    market: "Home",
-    source: "Amazon",
-    score: 84,
-    intent: 81,
-    speed: "+25%",
-    status: "rising",
-    angle: "Buyer intent rises around compact storage and quiet motors.",
-  },
-  {
-    id: 5,
-    name: "AI product photo backgrounds",
-    market: "Tech",
-    source: "Meta",
-    score: 80,
-    intent: 74,
-    speed: "+21%",
-    status: "rising",
-    angle: "Small stores want faster ad creative without studio shoots.",
-  },
-  {
-    id: 6,
-    name: "Mineral SPF serum sticks",
-    market: "Beauty",
-    source: "TikTok",
-    score: 78,
-    intent: 73,
-    speed: "+18%",
-    status: "rising",
-    angle: "Portable skincare is trending with travel and gym bag content.",
-  },
-  {
-    id: 7,
-    name: "Cordless fabric shavers",
-    market: "Home",
-    source: "Search",
-    score: 75,
-    intent: 69,
-    speed: "+14%",
-    status: "rising",
-    angle: "Low-ticket problem solving product with strong visual proof.",
-  },
-  {
-    id: 8,
-    name: "Dog enrichment freezer trays",
-    market: "Pets",
-    source: "TikTok",
-    score: 72,
-    intent: 66,
-    speed: "+12%",
-    status: "rising",
-    angle: "Owners respond to calming routines and recipe-led content.",
-  },
-];
-
-const ads: Ad[] = [
-  {
-    brand: "FlexFuel",
-    hook: "Sore legs tomorrow? Not if this is in your routine.",
-    spend: "High",
-    format: "UGC demo",
-    lift: "+31%",
-  },
-  {
-    brand: "PawPure",
-    hook: "The apartment smell fix pet owners keep reordering.",
-    spend: "Rising",
-    format: "Problem/solution",
-    lift: "+24%",
-  },
-  {
-    brand: "GlowLoop",
-    hook: "Salon curls without heat damage in 8 minutes.",
-    spend: "High",
-    format: "Before/after",
-    lift: "+28%",
-  },
-  {
-    brand: "DeskStep",
-    hook: "10k steps while clearing your inbox.",
-    spend: "Stable",
-    format: "Founder demo",
-    lift: "+19%",
-  },
-  {
-    brand: "Backdroply",
-    hook: "Turn one product photo into a full ad set.",
-    spend: "Rising",
-    format: "Screen capture",
-    lift: "+22%",
-  },
-  {
-    brand: "SunSnap",
-    hook: "SPF that fits next to your keys.",
-    spend: "Testing",
-    format: "Routine stack",
-    lift: "+16%",
-  },
-];
 
 const chartRanges = {
   "7": [42, 54, 49, 68, 74, 82, 88, 94],
@@ -184,29 +29,37 @@ const titles: Record<Route, string> = {
   billing: "Plans and billing",
 };
 
-const creativeBrief = [
+const defaultAnalyst: AnalystResult = {
+  prompt: "Find a product angle for recovery and sleep buyers",
+  response:
+    "Recovery gummies are the strongest near-term angle. Demand is moving through creator routines, buyer intent is high, and ad saturation is still moderate outside the biggest brands.",
+  plan: [
+    "Position the offer around next-day energy instead of generic recovery.",
+    "Bundle a 30-day supply with a sleep-tracking challenge.",
+    "Launch three UGC concepts: gym bag routine, bedtime stack and soreness myth-busting.",
+    "Retarget viewers with a comparison page against magnesium capsules.",
+  ],
+};
+
+const defaultCreativeBrief = [
   "Lead with a visible transformation in the first two seconds.",
   "Use routine-based hooks for repeat-purchase categories.",
   "Show the product in a real room, gym bag or bathroom counter.",
   "Test one founder-demo angle against one creator POV angle.",
 ];
 
-const launchPlan = [
-  "Position the offer around next-day energy instead of generic recovery.",
-  "Bundle a 30-day supply with a sleep-tracking challenge.",
-  "Launch three UGC concepts: gym bag routine, bedtime stack and soreness myth-busting.",
-  "Retarget viewers with a comparison page against magnesium capsules.",
-];
+async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
 
-function getStoredJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-
-  try {
-    const value = window.localStorage.getItem(key);
-    return value ? (JSON.parse(value) as T) : fallback;
-  } catch {
-    return fallback;
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Request failed: ${response.status}`);
   }
+
+  return response.json() as Promise<T>;
 }
 
 export function SignalPilotApp() {
@@ -216,30 +69,44 @@ export function SignalPilotApp() {
   const [market, setMarket] = useState("all");
   const [source, setSource] = useState("all");
   const [score, setScore] = useState(70);
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [ads, setAds] = useState<Ad[]>([]);
   const [saved, setSaved] = useState<number[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [storeStatus, setStoreStatus] = useState("Demo workspace");
+  const [creativeBrief, setCreativeBrief] = useState(defaultCreativeBrief);
   const [storeConnected, setStoreConnected] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
-  const [prompt, setPrompt] = useState("Find a product angle for recovery and sleep buyers");
-  const [activePrompt, setActivePrompt] = useState(prompt);
+  const [prompt, setPrompt] = useState(defaultAnalyst.prompt);
+  const [analyst, setAnalyst] = useState<AnalystResult>(defaultAnalyst);
   const [leadPlan, setLeadPlan] = useState("Growth");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setSaved(getStoredJson<number[]>("signalpilot_saved", []));
-    setLeads(getStoredJson<Lead[]>("signalpilot_leads", []));
+    let active = true;
+
+    apiJson<BootstrapPayload>("/api/bootstrap")
+      .then((payload) => {
+        if (!active) return;
+        setSignals(payload.signals);
+        setAds(payload.ads);
+        setSaved(payload.store.saved);
+        setLeads(payload.store.leads);
+        setStoreConnected(payload.store.storeConnected);
+        setCreativeBrief(payload.creativeBrief);
+        setAnalyst(payload.analyst);
+        setPrompt(payload.analyst.prompt);
+      })
+      .catch((error: Error) => setStatusMessage(`App data kon niet laden: ${error.message}`))
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem("signalpilot_saved", JSON.stringify(saved));
-  }, [saved]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem("signalpilot_leads", JSON.stringify(leads));
-  }, [leads]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -262,48 +129,97 @@ export function SignalPilotApp() {
         signal.score >= score
       );
     });
-  }, [query, market, source, score]);
+  }, [query, market, score, signals, source]);
 
-  const filteredAds = useMemo(() => ads.filter(searchMatches), [query]);
+  const filteredAds = useMemo(() => ads.filter(searchMatches), [ads, query]);
   const savedSignals = signals.filter((signal) => saved.includes(signal.id));
   const chartValues = chartRanges[range];
   const opportunityScore = Math.round(chartValues.at(-1)! - 7);
+  const storeStatus = storeConnected ? "Shopify connected" : "Demo workspace";
 
-  const toggleSaved = (id: number) => {
-    setSaved((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
+  const toggleSaved = async (id: number) => {
+    const previous = saved;
+    const optimistic = previous.includes(id) ? previous.filter((item) => item !== id) : [...previous, id];
+    setSaved(optimistic);
+
+    try {
+      const result = await apiJson<{ saved: number[] }>("/api/watchlist", {
+        method: "POST",
+        body: JSON.stringify({ signalId: id }),
+      });
+      setSaved(result.saved);
+      setStatusMessage("Watchlist opgeslagen.");
+    } catch (error) {
+      setSaved(previous);
+      setStatusMessage(error instanceof Error ? error.message : "Watchlist opslaan mislukt.");
+    }
   };
 
-  const connectStore = () => {
+  const connectStore = async () => {
     setStoreConnected(true);
-    setStoreStatus("Shopify connected");
+    try {
+      await apiJson<{ storeConnected: boolean }>("/api/store/connect", { method: "POST" });
+      setStatusMessage("Store connectie opgeslagen.");
+    } catch (error) {
+      setStoreConnected(false);
+      setStatusMessage(error instanceof Error ? error.message : "Store koppelen mislukt.");
+    }
   };
 
-  const submitPrompt = (event: FormEvent<HTMLFormElement>) => {
+  const submitPrompt = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setActivePrompt(prompt);
+    const previous = analyst;
+    setAnalyst({ ...analyst, prompt });
+
+    try {
+      const result = await apiJson<AnalystResult>("/api/analyst", {
+        method: "POST",
+        body: JSON.stringify({ prompt }),
+      });
+      setAnalyst(result);
+      setStatusMessage("AI analyst plan gegenereerd.");
+    } catch (error) {
+      setAnalyst(previous);
+      setStatusMessage(error instanceof Error ? error.message : "AI analyst mislukt.");
+    }
   };
 
-  const submitLead = (event: FormEvent<HTMLFormElement>) => {
+  const submitLead = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    setLeads((current) => [
-      ...current,
-      {
-        name: String(form.get("name") || ""),
-        email: String(form.get("email") || ""),
-        plan: String(form.get("plan") || "Growth"),
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-    event.currentTarget.reset();
-    setLeadPlan("Growth");
+    const payload = {
+      name: String(form.get("name") || ""),
+      email: String(form.get("email") || ""),
+      plan: String(form.get("plan") || "Growth"),
+    };
+
+    try {
+      const result = await apiJson<{ lead: Lead; leads: Lead[] }>("/api/leads", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setLeads(result.leads);
+      setStatusMessage(`Trial request opgeslagen voor ${result.lead.plan}.`);
+      event.currentTarget.reset();
+      setLeadPlan("Growth");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Trial request opslaan mislukt.");
+    }
   };
 
-  const choosePlan = (plan: string) => {
+  const startCheckout = async (plan: string) => {
     setLeadPlan(plan);
-    setRoute("billing");
+
+    try {
+      const result = await apiJson<{ mode: string; session: { id: string; plan: string } }>("/api/checkout", {
+        method: "POST",
+        body: JSON.stringify({ plan }),
+      });
+      setRoute("billing");
+      setStatusMessage(`Demo checkout aangemaakt voor ${result.session.plan}. Stripe kan hier straks op aansluiten.`);
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Checkout starten mislukt.");
+    }
   };
 
   return (
@@ -377,7 +293,15 @@ export function SignalPilotApp() {
           </div>
         </header>
 
-        {route === "dashboard" && (
+        {statusMessage && (
+          <div className="status-banner" role="status">
+            {statusMessage}
+          </div>
+        )}
+
+        {isLoading && <div className="panel">App data laden...</div>}
+
+        {!isLoading && route === "dashboard" && (
           <section className="view active" aria-label="Dashboard">
             <div className="kpi-grid">
               <Kpi label="Opportunity score" value={opportunityScore} note="+12 this week" />
@@ -454,7 +378,7 @@ export function SignalPilotApp() {
           </section>
         )}
 
-        {route === "signals" && (
+        {!isLoading && route === "signals" && (
           <section className="view active" aria-label="Signals">
             <div className="tool-row">
               <label>
@@ -502,7 +426,7 @@ export function SignalPilotApp() {
           </section>
         )}
 
-        {route === "ads" && (
+        {!isLoading && route === "ads" && (
           <section className="view active" aria-label="Ad library">
             <div className="ad-layout">
               <section className="panel">
@@ -544,7 +468,7 @@ export function SignalPilotApp() {
           </section>
         )}
 
-        {route === "analyst" && (
+        {!isLoading && route === "analyst" && (
           <section className="view active" aria-label="AI analyst">
             <div className="analyst-layout">
               <section className="panel chat-panel">
@@ -555,11 +479,8 @@ export function SignalPilotApp() {
                   </div>
                 </div>
                 <div className="chat-log">
-                  <div className="chat-message user">{activePrompt}</div>
-                  <div className="chat-message ai">
-                    Recovery gummies are the strongest near-term angle. Demand is moving through creator routines,
-                    buyer intent is high, and ad saturation is still moderate outside the biggest brands.
-                  </div>
+                  <div className="chat-message user">{analyst.prompt}</div>
+                  <div className="chat-message ai">{analyst.response}</div>
                 </div>
                 <form className="prompt-form" onSubmit={submitPrompt}>
                   <input onChange={(event) => setPrompt(event.target.value)} type="text" value={prompt} />
@@ -571,7 +492,7 @@ export function SignalPilotApp() {
               <aside className="panel launch-plan">
                 <h2>Launch plan</h2>
                 <ol>
-                  {launchPlan.map((item) => (
+                  {analyst.plan.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ol>
@@ -580,7 +501,7 @@ export function SignalPilotApp() {
           </section>
         )}
 
-        {route === "billing" && (
+        {!isLoading && route === "billing" && (
           <section className="view active" aria-label="Billing">
             <div className="pricing-grid">
               {[
@@ -598,7 +519,7 @@ export function SignalPilotApp() {
                   <button
                     className={`${plan === "Growth" ? "primary-button" : "secondary-button"} full`}
                     type="button"
-                    onClick={() => choosePlan(plan)}
+                    onClick={() => startCheckout(plan)}
                   >
                     Choose {plan}
                   </button>
@@ -609,7 +530,7 @@ export function SignalPilotApp() {
             <section className="panel lead-panel">
               <div>
                 <h2>Trial requests</h2>
-                <p>{leads.length ? `${leads.length} saved request${leads.length === 1 ? "" : "s"} in this browser.` : "No requests yet."}</p>
+                <p>{leads.length ? `${leads.length} saved request${leads.length === 1 ? "" : "s"} on the server.` : "No requests yet."}</p>
               </div>
               <form className="lead-form" onSubmit={submitLead}>
                 <label>
@@ -652,7 +573,7 @@ export function SignalPilotApp() {
                 type="button"
                 onClick={() => {
                   setUpgradeOpen(false);
-                  setRoute("billing");
+                  void startCheckout("Growth");
                 }}
               >
                 Request upgrade
