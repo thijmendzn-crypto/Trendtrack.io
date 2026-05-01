@@ -22,7 +22,9 @@ export default function SignUpPage() {
 
   return (
     <main className="auth-page">
-      <SignUp appearance={{ elements: { rootBox: "clerk-root" } }} />
+      <div className="clerk-shell">
+        <SignUp />
+      </div>
     </main>
   );
 }

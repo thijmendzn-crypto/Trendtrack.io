@@ -813,8 +813,10 @@ output {
   text-decoration: none;
 }
 
-.clerk-root {
-  margin: 0 auto;
+.clerk-shell {
+  display: grid;
+  min-height: 520px;
+  place-items: center;
 }
 
 @media (max-width: 1120px) {

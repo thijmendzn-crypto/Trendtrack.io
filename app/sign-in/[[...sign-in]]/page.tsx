@@ -8,7 +8,9 @@ export default function SignInPage() {
 
   return (
     <main className="auth-page">
-      <SignIn appearance={{ elements: { rootBox: "clerk-root" } }} />
+      <div className="clerk-shell">
+        <SignIn />
+      </div>
     </main>
   );
 }
