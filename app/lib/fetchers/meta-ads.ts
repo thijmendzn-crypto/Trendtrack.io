@@ -14,14 +14,10 @@ type MetaAdLibraryResponse = {
     id: string;
     page_name: string;
     ad_creative_bodies?: string[];
-    ad_creative_link_captions?: string[];
-    ad_creative_link_descriptions?: string[];
     ad_snapshot_url: string;
     spend?: { lower_bound?: string; upper_bound?: string };
-    ad_creative_link_titles?: string[];
-    images?: string[];
   }>;
-  paging?: { cursors?: { after?: string }; next?: string };
+  error?: { message: string };
 };
 
 function classifySpend(lower?: string, upper?: string): string {
@@ -35,7 +31,6 @@ function classifySpend(lower?: string, upper?: string): string {
 async function getMetaToken(): Promise<string | null> {
   const envToken = process.env.META_AD_LIBRARY_TOKEN;
 
-  // Try Supabase for a fresher token first
   try {
     const { createClient } = await import("@supabase/supabase-js");
     const db = createClient(
@@ -45,16 +40,13 @@ async function getMetaToken(): Promise<string | null> {
     const { data } = await db.from("meta_token").select("token").eq("id", 1).maybeSingle();
     if (data?.token) return data.token;
   } catch {
-    // fall through to env token
+    // fall through
   }
 
   return envToken || null;
 }
 
-export async function fetchMetaAds(searchTerms: string[]): Promise<MetaAd[]> {
-  const token = await getMetaToken();
-  if (!token) return [];
-
+async function fetchViaApi(searchTerms: string[], token: string): Promise<MetaAd[]> {
   const results: MetaAd[] = [];
 
   for (const term of searchTerms) {
@@ -64,19 +56,18 @@ export async function fetchMetaAds(searchTerms: string[]): Promise<MetaAd[]> {
       ad_reached_countries: "US",
       search_terms: term,
       fields: "id,page_name,ad_creative_bodies,ad_snapshot_url,spend",
-      limit: "10",
+      limit: "8",
       ad_active_status: "ACTIVE",
     });
 
     try {
       const response = await fetch(
         `https://graph.facebook.com/v21.0/ads_archive?${params.toString()}`,
-        { next: { revalidate: 0 } }
+        { signal: AbortSignal.timeout(10000) }
       );
 
-      const payload = (await response.json()) as MetaAdLibraryResponse & { error?: { message: string } };
-
-      if ("error" in payload && payload.error) continue;
+      const payload = (await response.json()) as MetaAdLibraryResponse;
+      if (payload.error) continue;
 
       for (const ad of payload.data || []) {
         const body = ad.ad_creative_bodies?.[0] || "";
@@ -97,4 +88,71 @@ export async function fetchMetaAds(searchTerms: string[]): Promise<MetaAd[]> {
   }
 
   return results;
+}
+
+// Fallback: scrape public Ad Library search
+async function fetchViaPublicSearch(searchTerms: string[]): Promise<MetaAd[]> {
+  const results: MetaAd[] = [];
+
+  for (const term of searchTerms.slice(0, 3)) {
+    try {
+      const url = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&q=${encodeURIComponent(term)}&search_type=keyword_unordered&media_type=all`;
+
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml",
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) continue;
+
+      const html = await response.text();
+
+      // Extract page names and ad copy from the JSON embedded in the page
+      const pageNameRegex = /"page_name"\s*:\s*"([^"]{3,50})"/g;
+      const bodyRegex = /"body"\s*:\s*\{[^}]*"text"\s*:\s*"([^"]{20,150})"/g;
+
+      const pageNames: string[] = [];
+      const bodies: string[] = [];
+
+      let m;
+      while ((m = pageNameRegex.exec(html)) !== null && pageNames.length < 5) {
+        pageNames.push(m[1]);
+      }
+      while ((m = bodyRegex.exec(html)) !== null && bodies.length < 5) {
+        bodies.push(m[1].replace(/\\n/g, " ").replace(/\\"/g, '"'));
+      }
+
+      pageNames.forEach((name, i) => {
+        results.push({
+          ad_id: `public-${term}-${i}`,
+          brand: name,
+          page_name: name,
+          hook: bodies[i] || `${term} ad`,
+          image_url: null,
+          ad_url: url,
+          spend: "Unknown",
+          format: bodies[i]?.includes("?") ? "Question hook" : "Direct",
+        });
+      });
+    } catch {
+      continue;
+    }
+  }
+
+  return results;
+}
+
+export async function fetchMetaAds(searchTerms: string[]): Promise<MetaAd[]> {
+  const token = await getMetaToken();
+
+  if (token) {
+    const apiResults = await fetchViaApi(searchTerms, token);
+    if (apiResults.length > 0) return apiResults;
+  }
+
+  // Fallback to public search
+  return fetchViaPublicSearch(searchTerms);
 }
